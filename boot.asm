@@ -51,7 +51,6 @@ start:
 
 start32:
 use32
-
   ; wat
   mov    eax, SEG_KDATA<<3
   mov    ds, eax

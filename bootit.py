@@ -14,9 +14,9 @@ with open(fname, "rb") as f:
 with open(fname, "ab") as f:
     write_str = b''
     for i in range(0, pad_size):
-        write_str += 0x00
+        write_str += b'\x00'
 
-    write_str += 0x55 + 0xaa
+    write_str += b'\x55\xaa'
     f.write(write_str)
 
     
