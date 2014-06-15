@@ -1,38 +1,87 @@
-bits 16
-org 0x7c00 ; "Tell NASM that this code will be loaded at 0x7C00
-             ; to ensure any absolute jumps are calculated correctly"
-             ; I don't really understand what this means.
+; TODO: what is SEG_NULLASM and the macro for? how do macros work?
+%define SEG_NULLASM dq 0
+
+%macro SEG_ASM 3 ; Type, Base, Lim
+        dw (((%3) >> 12) & 0xffff)
+        dw ((%2) & 0xffff)
+        db (((%2) >> 16) & 0xff)
+        db (0x90 | (%1))
+        db (0xC0 | (((%3) >> 28) & 0xf))
+        db (((%2) >> 24) & 0xff)
+%endmacro
+
+
+; TODO: what are these for? they are used under gdt label
+%define STA_X     0x8  ; Executable segment
+%define STA_E     0x4  ; Expand down (non-executable segments)
+%define STA_C     0x4  ; Conforming code segment (executable only)
+%define STA_W     0x2  ; Writeable (non-executable segments)
+%define STA_R     0x2  ; Readable (executable segments)
+%define STA_A     0x1  ; Accessed
+
+
+; TODO: figure out what these are for
+%define SEG_KCODE 1  ; kernel Code
+%define SEG_KDATA 2  ; kernel Data+Stack
+
+use16
+
+global start ; TODO: what does global do?
+
+extern bootmain ; TODO: what does extern do? i believe bootmain is the function in the C code
 
 start:
+    cli ; disable interrupts
+
+    ; zero out the segment registers
     xor ax, ax
-    mov ds, ax ; ds is used in lodsb, so needs to be cleared. I guess?
-    mov es, ax ; xv6 bootloader does this. does it need to be cleared here?
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
 
-    mov si, VerySpecialWords ; why si? it's used by lodsb
-    mov bx, 0x00
-    mov ah, 0x0e ; this sets "teletype mode". need to figure out what the HECK
+    ; TODO: what exactly does this do
+    lgdt   [gdtdesc]
 
-print:
-    lodsb ; whatever ESI points to into AL, increments ESI by 1
-    cmp al, 0
-    je end
+    ; switch to protected mode (see Intel system programming manual
+    mov eax, cr0
+    or al, 1
+    mov cr0, eax
 
-    int 0x10
-; "Lastly, we need to know how to print to the screen. You can either write directly into video memory at 0xB8000 - 0xBFFFF, or you can use BIOS Interrupt 0×10. Interrupts take their paramters in processor registers (small areas of 32-bit memory used by programmers to hold variables). INT 0×10 takes the mode in AH, the page in BH, the colour in BL and the character itself (in ASCII) in AL."
+    jmp    (SEG_KCODE<<3):start32 ; what does this do?
 
-    jmp print
+start32:
+use32
 
-end:
-    cli ; disables interrupts
-    hlt
-
-
-VerySpecialWords:
-    db 'This is my kernel. '
-    db 'There are many like it, but this one is mine.'
-    db 0   ; the zero here is a trailing null character?
+  ; wat
+  mov    eax, SEG_KDATA<<3
+  mov    ds, eax
+  mov    es, eax
+  mov    ss, eax
+  mov    ax, 0
+  mov    fs, eax
+  mov    gs, eax
 
 
-times 510 - ($ - $$) db 0 ; i saw this in multiple bootloaders.
-dw 0xAA55 ; the hardware checks the last 2 bytes of the boot sector to confirm that its an MBR. like a secret handshake
+; Something about clearing the screen
+  mov edi, 0xb8000
+  mov ecx, 80*25*2
+  mov al, 0
+  rep stosb
 
+
+; TODO: figure out what call does
+  mov    esp, start
+  call   bootmain
+
+
+; TODO: figure out what this whole section does
+gdt:
+    ; null entry
+    SEG_NULLASM
+    ; code entry
+    SEG_ASM STA_X | STA_R, 0x0, 0xffffffff
+    SEG_ASM STA_W,         0x0, 0xffffffff
+
+gdtdesc:
+    dw (gdtdesc - gdt - 1) ; Size
+    dd gdt ; Offset
