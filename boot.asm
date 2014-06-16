@@ -17,7 +17,7 @@
 %endmacro
 
 
-; TODO: figure out what these are for
+; code segment is entry 1 in GDT, data segment is entry 2
 %define SEG_KCODE 1  ; kernel Code
 %define SEG_KDATA 2  ; kernel Data+Stack
 
@@ -43,16 +43,22 @@ start:
     or al, 1
     mov cr0, eax
 
-    jmp    (SEG_KCODE<<3):start32 ; what does this do?
+    jmp    (SEG_KCODE<<3):start32 ; something something long jump to flush the pipeline. don't actually understand the segment here. TODO: figure out
+    ; segment descriptors are 8 bytes and the code entry is the second entry
+    ; so that's why it's 8. but does this load something in the CS segment? what
+    ; exactly is it doing?
 
 start32:
 use32
-  ; wat
+  ; now we are in protected mode
+
+  ; TODO: this has something to do with the data segment entry in GDT; clarify.
+  ; http://www.cse.iitd.ernet.in/~sbansal/os/lec/l13.html has this to say:
+  ; "The first few instructions in 32-bit mode (8458-8461) setup DS, ES, and SS registers to point to the second segment descriptor in privileged mode (SEG_KDATA * 8)."
   mov    eax, SEG_KDATA<<3
   mov    ds, eax
   mov    es, eax
   mov    ss, eax
-  mov    ax, 0
   mov    fs, eax
   mov    gs, eax
 
@@ -85,6 +91,7 @@ gdt:
     SEG_ASM 0010b ; (Table 3-1 in Intel manual). 0010 says data, read/write
 
 
+; GDT descriptor. 6 bytes
 gdtdesc:
-    dw (gdtdesc - gdt - 1) ; Size
-    dd gdt ; Offset
+    dw (gdtdesc - gdt - 1) ; GDT size
+    dd gdt ; GDT address
