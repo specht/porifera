@@ -1,10 +1,13 @@
+all: os-image
+	qemu-system-i386 os-image
 
-bootblock: boot.asm bootmain.c
-	nasm -f elf32 -o boot.o boot.asm
-	gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -O -nostdinc -I. -o bootmain.o -c bootmain.c
-	# -c disables the linking
-	# -O is -O1, optimization
-	ld -N -m elf_i386 -e start -Ttext 0x7c00 -o bootblock.o boot.o bootmain.o
-	objdump -S bootblock.o > bootblock.asm # disassemble
-	objcopy -S -O binary -j .text bootblock.o bootblock.bin
-	python bootit.py bootblock.bin
+os-image: kernel boot
+	cat boot_sect.bin kernel.bin > os-image
+
+kernel: kernel.c entry.asm
+	nasm entry.asm -f elf64 -o entry.o
+	gcc -ffreestanding -c kernel.c -o kernel.o
+	ld -o kernel.bin -Ttext 0x1000 entry.o kernel.o --oformat binary
+
+boot: boot.asm
+	nasm boot.asm -o boot_sect.bin
