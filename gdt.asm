@@ -27,10 +27,8 @@ gdt_data:
                  ; Limit bits 16-19 = 1111
     db 0x0
 
-gdt_end: ; I'm honestly not sure what this does that the label below doesn't do.
-
 gdt_descriptor:
-    dw (gdt_end - gdt_start - 1)
+    dw (gdt_descriptor - gdt_start - 1)
     dd gdt_start
 
 CODE_SEG equ (gdt_code - gdt_start)

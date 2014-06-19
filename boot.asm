@@ -3,6 +3,8 @@ KERNEL_OFFSET equ 0x1000
 
     mov [BOOT_DRIVE], dl ; BIOS stores boot drive in DL
 
+    ; set up a stack since we'll be doing calls
+    ; TODO: why this address?
     mov bp, 0x9000
     mov sp, bp
 
@@ -45,9 +47,9 @@ BEGIN_PM:
     jmp $ ; jump to this line over and over
 
 BOOT_DRIVE db 0
-MSG_REAL_MODE db "Keeping it real.", 0
+MSG_REAL_MODE db "Hello, I'm a bootloader.", 0
+MSG_LOAD_KERNEL db "Loading kernel now...", 0
 MSG_PROT_MODE db "Made it to protected mode. lalalalala", 0
-MSG_LOAD_KERNEL db "Loading kernel nowwww...", 0
 
 ; bootsector padding + adding the boot signature
 times 510-($-$$) db 0
