@@ -1,6 +1,5 @@
-all: os-image floppy
-	qemu-system-i386 os-image
-	rm -f floppy.img
+run: floppy
+	qemu-system-i386 floppy.img
 
 floppy: os-image
 	rm floppy.img; mkdosfs -C floppy.img 1440
