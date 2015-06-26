@@ -79,7 +79,7 @@ int render_circle(int cx, int cy, int x, int y)
 
 unsigned char render(int x, int y, int phi, int size)
 {
-    int tx, ty, rx, ry;
+    int rx, ry;
     int c = cos(phi);
     int s = sin(phi);
     int s2 = size >> 1;
@@ -87,28 +87,19 @@ unsigned char render(int x, int y, int phi, int size)
     y -= 100 * 256 - 128;
     x = ABS(x);
     y = ABS(y);
-    tx = x;
-    ty = y;
-//     nx = x;
-//     ny = y;
-//     rx = (y * cos(phi) - x * sin(phi));
-    rx = tx * c;
-    rx -= ty * s;
-    ry = tx * s;
-    ry += ty * c;
+//     tx = x;
+//     ty = y;
+    rx = x * c;
+    rx -= y * s;
+    ry = x * s;
+    ry += y * c;
     rx >>= 8;
     ry >>= 8;
     x = rx;
     y = ry;
-//     ry = (y * sin(phi) + x * cos(phi));
-//     x = rx;
-//     y = ry;
-//     nx = x;
-//     ny = y;
-//     if (sin((nx)>> 5) < (ny >> 6))
     if ((y >> 8) % size < s2 ^ (x >> 8) % size < s2)
         return 0xff;
-    return 0;
+    return ((x + y) >> 5) & 0xff;
     if (x > 0 && x < 160 * 256 && y > 0 && y < 160 * 256)
     {
         if (y < R * 256)
