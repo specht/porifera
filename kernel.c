@@ -24,13 +24,13 @@ inline int sin(int x)
 {
     x &= 1023;
     if (x < 256)
-        return sin_lut[(unsigned char)x];
+        return sin_lut[x & 0xff];
     else if (x < 512)
-        return sin_lut[0xff - (unsigned char)(x)];
+        return sin_lut[(x & 0xff) ^ 0xff];
     else if (x < 768)
-        return -sin_lut[(unsigned char)x];
+        return -sin_lut[x & 0xff];
     else
-        return -sin_lut[0xff - (unsigned char)(x)];
+        return -sin_lut[(x & 0xff) ^ 0xff];
 }
 
 inline int cos(int x)
@@ -77,6 +77,11 @@ int render_circle(int cx, int cy, int x, int y)
         return 0;
 }
 
+unsigned char f(float x, float y)
+{
+    return (int)x > 150 ? 0 : 255;
+}
+
 unsigned char render(int x, int y, int phi, int size)
 {
     int rx, ry;
@@ -97,9 +102,10 @@ unsigned char render(int x, int y, int phi, int size)
     ry >>= 8;
     x = rx;
     y = ry;
+//     return f(0, ((float)x) / 256.0);
     if ((y >> 8) % size < s2 ^ (x >> 8) % size < s2)
         return 0xff;
-    return ((x + y) >> 5) & 0xff;
+    return ((x + y) >> 7) & 0xff;
     if (x > 0 && x < 160 * 256 && y > 0 && y < 160 * 256)
     {
         if (y < R * 256)
@@ -142,6 +148,7 @@ void main() {
     unsigned char color;
     int x, y, dx, dy, i;
     int phi;
+    unsigned int d1 = 1;
 
     // set grayscale palette
     outportb(0x03c6, 0xff);
@@ -153,7 +160,7 @@ void main() {
         outportb(0x03c9, i);
     }
 
-    phi = 0;
+    phi = 40;
     while (1)
     {
         unsigned char* vid_mem = buffer;
@@ -171,7 +178,18 @@ void main() {
                         sum += render(x * 256 + dx * 64, y * 256 + dy * 64, phi * 4, (sin(phi * 8) + 258) / 8 + 32);
                     }
                 }
-                color = sum >> 4 >> 2;
+//                 sum = 0;
+                sum >>= 4;
+                d1 = (d1 * 1103515245U + 12345U) & 0x7fffffffU;
+                sum -= 2;
+                sum += d1 >> 27;
+                if (sum < 0)
+                    sum = 0;
+                if (sum > 255)
+                    sum = 255;
+                color = sum >> 2;
+//                 color *= 20;
+//                 color = sum >> 6;
 //                 color = render(x * 256 + dx * 64, y * 256 + dy * 64, phi * 4, (sin(phi * 8) + 258) / 8 + 32) >> 2;
                 *(vid_mem) = color;
                 vid_mem += 1;
