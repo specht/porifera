@@ -22,7 +22,7 @@ KERNEL_OFFSET equ 0x1000
 load_kernel:
     ; prep for disk_load
     mov bx, KERNEL_OFFSET ; where in memory we are loading the kernel
-    mov dh, 1 ; number of sectors
+    mov dh, 2 ; number of sectors
     mov dl, [BOOT_DRIVE] ; letter of the drive? TODO
     call disk_load
 
