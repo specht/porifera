@@ -18,9 +18,4 @@ disk_load:
     ret
 
 disk_error:
-    mov bx, DISK_ERROR_MSG
-    call print_string
-
     jmp $ ; just bail, man
-
-DISK_ERROR_MSG db "There was a disk error. Sorry", 0

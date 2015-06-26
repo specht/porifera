@@ -2,6 +2,8 @@
 
 ; switches to protected mode
 switch_to_pm:
+    mov ax,0x13
+    int 0x10
     cli ; disable interrupts
 
     lgdt [gdt_descriptor] ; load GDT
