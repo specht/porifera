@@ -160,7 +160,7 @@ void main() {
         outportb(0x03c9, i);
     }
 
-    phi = 40;
+    phi = 100;
     while (1)
     {
         unsigned char* vid_mem = buffer;
@@ -178,8 +178,9 @@ void main() {
                         sum += render(x * 256 + dx * 64, y * 256 + dy * 64, phi * 4, (sin(phi * 8) + 258) / 8 + 32);
                     }
                 }
-//                 sum = 0;
                 sum >>= 4;
+
+                // random dithering, there's a RNG below
                 d1 = (d1 * 1103515245U + 12345U) & 0x7fffffffU;
                 sum -= 2;
                 sum += d1 >> 27;
@@ -187,9 +188,9 @@ void main() {
                     sum = 0;
                 if (sum > 255)
                     sum = 255;
+
                 color = sum >> 2;
-//                 color *= 20;
-//                 color = sum >> 6;
+
 //                 color = render(x * 256 + dx * 64, y * 256 + dy * 64, phi * 4, (sin(phi * 8) + 258) / 8 + 32) >> 2;
                 *(vid_mem) = color;
                 vid_mem += 1;
